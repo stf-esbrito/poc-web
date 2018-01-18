@@ -1,11 +1,12 @@
 import { Component, OnInit } from "@angular/core";
 import { AbstractHttpService } from "../shared/service/abstract-http.service";
-import { Http } from "@angular/http";
+import { Http, ResponseContentType } from "@angular/http";
 import { UploadFormService } from "./service/upload-form.service";
 import { RequestOptions, RequestOptionsArgs } from "@angular/http";
 import { Observable } from "rxjs";
 import { environment } from "../../environments/environment";
 import { Headers } from "@angular/http";
+import 'rxjs/Rx' ;
 
 @Component({
     selector: 'upload-form',
@@ -14,12 +15,14 @@ import { Headers } from "@angular/http";
 })
 
 export class UploadFormComponent implements OnInit {
-    constructor(private uploadFormService : UploadFormService, private http: Http){
-    }
-    ngOnInit(){}
     protected apiUrl: string = environment.apiUrl;
-    file: File;
-    onChange(event: EventTarget) {
+    public arquivo : any;
+
+    constructor(private uploadFormService : UploadFormService, private http: Http){}
+
+    ngOnInit(){}
+    
+    public onChange(event: EventTarget) {
         let eventObj: MSInputMethodContext = <MSInputMethodContext>event;
         let target : HTMLInputElement = <HTMLInputElement> eventObj.target;
         let fileList: FileList = target.files;
@@ -33,4 +36,16 @@ export class UploadFormComponent implements OnInit {
             this.http.post(this.apiUrl+'upload', formData,options).subscribe();
             }
     }
-}
+    public buscar(){
+        this.getFileDownload().subscribe(res => {
+            let fileUrl = URL.createObjectURL(res);
+            var link = document.createElement("a");
+            link.download = name;
+            link.href = fileUrl;
+            link.click();
+        });
+    }
+    public getFileDownload(): any{
+        return this.http.get(this.apiUrl+'upload', { responseType: ResponseContentType.Blob }).map(res => {return new Blob([res.blob()],{ type: 'image/png' })});      
+    }
+}   
