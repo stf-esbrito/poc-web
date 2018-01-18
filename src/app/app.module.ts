@@ -3,16 +3,24 @@ import { NgModule } from '@angular/core';
 
 
 import { AppComponent } from './app.component';
+import { UploadFormComponent } from './upload-form/upload-form.component';
+import { UploadFormService } from './upload-form/service/upload-form.service';
+import { HttpModule } from '@angular/http';
 
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    UploadFormComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    HttpModule
   ],
-  providers: [],
+  providers: [
+    UploadFormService
+    
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
