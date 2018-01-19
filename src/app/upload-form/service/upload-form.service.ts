@@ -6,7 +6,16 @@ import { AbstractHttpService } from "../../shared/service/abstract-http.service"
 declare var $: any;
 
 @Injectable()
-export class UploadFormService{
+export class UploadFormService extends AbstractHttpService<any>{
     constructor(http: Http){
+        super('upload', http);
+    }
+
+    public post(requestBody: any) : Observable<Blob> {
+        return super.post(requestBody);
+    }
+
+    public getFile(id: number) : Observable<Blob>{
+        return super.getFile(id);
     }
 }

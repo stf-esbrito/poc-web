@@ -1,47 +1,43 @@
-import { environment } from '../../../environments/environment';
-import { Http, RequestOptions, Headers } from '@angular/http';
-import 'rxjs/add/operator/map';
-import { Observable } from 'rxjs/Observable';
-import { Subscription, ISubscription } from 'rxjs/Subscription';
-import { log } from 'util';
-import { Router } from '@angular/router';
+import { Http, RequestOptions, Headers, ResponseContentType } from "@angular/http";
+import { Observable } from "rxjs";
+import 'rxjs/add/operator/map'
+import { Options } from 'selenium-webdriver';
+import { environment } from "../../../environments/environment";
+
+
 
 export abstract class AbstractHttpService<T> {
 
-    protected apiUrl: string = environment.apiUrl;
+    private apiUrl: string = environment.apiUrl;
 
-    constructor(protected resource : string, private http: Http){
-        
+    constructor(
+        private resource: string, 
+        private http: Http) {
     }
-    
+
     public queryAll(queryParams?: any): Observable<T[]> {
         return this.http.get(`${this.apiUrl}${this.resource}?${this.buildQueryParams(queryParams)}`, this.getCustomOptions())
             .map(response => response.json());
     }
 
-    public queryAllPath(path: string, queryParams?: any): Observable<T[]> {
-        console.log(queryParams);
-        return this.http.get(`${this.apiUrl}${this.resource}/${path}?${this.buildQueryParams(queryParams)}`, this.getCustomOptions())
-        .map(response => response.json());
-    }
-
-    public get(id: any): Observable<T> {
+    public get(id: number): Observable<T> {
         return this.http.get(`${this.apiUrl}${this.resource}/${id}`, this.getCustomOptions())
             .map(response => response.json());
     }
 
-    public post(requestBody: T): Observable<any> {
-        return this.http.post(`${this.apiUrl}${this.resource}`, requestBody, this.getCustomOptions())
-            .map(response => response.json());
+    public getFile(id: number) : Observable<Blob> {
+        return this.http.get(`${this.apiUrl}${this.resource}/${id}`, this.getCustomOptions()).map(res => {
+            return new Blob([res.blob()], { type: res.blob().type })
+        });
     }
-    
-    public postAndRedirect(requestBody: T, path: string): Observable<any> {
+
+    public post(requestBody: T): Observable<T> {
         return this.http.post(`${this.apiUrl}${this.resource}`, requestBody, this.getCustomOptions())
             .map(response => response.json());
     }
 
-    public put(requestBody: T): Observable<any>{
-        return this.http.put(`${this.apiUrl}${this.resource}`, requestBody, this.getCustomOptions())
+    public put(requestBody: T): Observable<T> {
+        return this.http.put(`${this.apiUrl}${this.resource}/${requestBody['id']}`, requestBody, this.getCustomOptions())
             .map(response => response.json());
     }
 
@@ -49,46 +45,26 @@ export abstract class AbstractHttpService<T> {
         return this.http.delete(`${this.apiUrl}${this.resource}/${requestBody}`, this.getCustomOptions())
             .map(response => response);
     }
-
-    private buildQueryParams(params: any, pagina?: any): string {
+    
+    private buildQueryParams(params: any): string {
         let queryParams: string = '';
+
         for (let property in params) {
-            queryParams += this.addParam(queryParams, property, params);
+            if (queryParams === '') {
+                queryParams += `${[property]}=${params[property]}`;
+            } else {
+                queryParams += `&${[property]}=${params[property]}`;
+            }
         }
-        if(pagina){
-            queryParams += this.addPaginateParams(pagina, queryParams);
-        }
+
         return queryParams;
     }
 
-    private addParam(queryParams, property: any, params: any) {
-      if (params[property]) {
-        if (queryParams === '') {
-          return `${[property]}=${params[property]}`;
-        }
-        else {
-          return `&${[property]}=${params[property]}`;
-        }
-      }
-      return '';
-    }
-
-    private addPaginateParams(pagina,queryParams) {
-      if (pagina) {
-        if (queryParams === '') {
-          return `?page=${pagina.page}&size=${pagina.size}`;
-        }
-        else {
-          return `&page=${pagina.page}&size=${pagina.size}`;
-        }
-      }
-    }
-
-    public getCustomOptions(): RequestOptions {
+    private getCustomOptions(): RequestOptions {
         let headers = new Headers();
-        headers.append('Content-Type', 'application/json');
-
-        return new RequestOptions({headers: headers});
+        headers.append('Accept', 'application/json');
+        // headers.append('Content-Type', 'application/json');
+        // headers.append('Content-Disposition', 'form-data');
+        return new RequestOptions({headers: headers, responseType : ResponseContentType.Blob},);
     }
-
 }

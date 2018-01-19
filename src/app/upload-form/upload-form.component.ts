@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ElementRef } from "@angular/core";
 import { AbstractHttpService } from "../shared/service/abstract-http.service";
 import { Http, ResponseContentType } from "@angular/http";
 import { UploadFormService } from "./service/upload-form.service";
@@ -6,7 +6,8 @@ import { RequestOptions, RequestOptionsArgs } from "@angular/http";
 import { Observable } from "rxjs";
 import { environment } from "../../environments/environment";
 import { Headers } from "@angular/http";
-import 'rxjs/Rx' ;
+import 'rxjs/Rx';
+import { Colaborador } from "../model/colaborador.model";
 
 @Component({
     selector: 'upload-form',
@@ -16,36 +17,53 @@ import 'rxjs/Rx' ;
 
 export class UploadFormComponent implements OnInit {
     protected apiUrl: string = environment.apiUrl;
-    public arquivo : any;
 
-    constructor(private uploadFormService : UploadFormService, private http: Http){}
+    constructor(private element: ElementRef, private uploadFormService: UploadFormService, private http: Http) { }
 
-    ngOnInit(){}
-    
-    public onChange(event: EventTarget) {
-        let eventObj: MSInputMethodContext = <MSInputMethodContext>event;
-        let target : HTMLInputElement = <HTMLInputElement> eventObj.target;
-        let fileList: FileList = target.files;
-        if(fileList.length > 0) {
-            let file: File = fileList[0];
-            let formData:FormData = new FormData();
-            formData.append('degree_attachment', file, file.name);
-            let headers = new Headers();
-            headers.append('Accept', 'application/json');
-            let options = new RequestOptions({ headers: headers });
-            this.http.post(this.apiUrl+'upload', formData,options).subscribe();
-            }
+    ngOnInit() { }
+
+    public onClick() {
+        
+        let file = this.getFileFromInput();
+        if (this.fileIsValid(file)) {
+            let formData: FormData = new FormData();
+            let colaborador = new Colaborador();
+            colaborador.name = "Teste";
+            formData.append('colaborador', JSON.stringify(colaborador));
+            formData.append('file', file, file.name);
+            this.uploadFormService.post(formData).subscribe();
+        }
     }
-    public buscar(){
-        this.getFileDownload().subscribe(res => {
-            let fileUrl = URL.createObjectURL(res);
-            var link = document.createElement("a");
-            link.download = name;
-            link.href = fileUrl;
-            link.click();
+    public downloadFile(id: number) {
+        this.getFileDownload(id).subscribe(res => {
+            this.downloadAction(res);
         });
     }
-    public getFileDownload(): any{
-        return this.http.get(this.apiUrl+'upload', { responseType: ResponseContentType.Blob }).map(res => {return new Blob([res.blob()],{ type: 'image/png' })});      
+
+    public getFileDownload(id: number): any {
+        return this.uploadFormService.getFile(id);
+    }
+
+    public getFileFromInput(): File {
+        return this.element.nativeElement.querySelector("#file").files == null ? null : this.element.nativeElement.querySelector("#file").files[0];
+    }
+
+    public fileIsValid(file: File) {
+        if (file != null) {
+            if (file.type == "aplication/pdf"
+                || file.type == "image/png"
+                || file.type == "image/jpeg") {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public downloadAction(res: any) {
+        let fileUrl = URL.createObjectURL(res);
+        var link = document.createElement("a");
+        link.download = name;
+        link.href = fileUrl;
+        link.click();
     }
 }   
