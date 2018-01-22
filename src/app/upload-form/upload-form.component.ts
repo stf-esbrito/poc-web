@@ -22,25 +22,28 @@ export class UploadFormComponent implements OnInit {
 
     ngOnInit() { }
 
+    public idFile : number;
     public onClick() {
-        
         let file = this.getFileFromInput();
         if (this.fileIsValid(file)) {
             let formData: FormData = new FormData();
             let colaborador = new Colaborador();
             colaborador.name = "Teste";
-            formData.append('colaborador', JSON.stringify(colaborador));
+            formData.append('colaboradorJson', JSON.stringify(colaborador));
             formData.append('file', file, file.name);
             this.uploadFormService.post(formData).subscribe();
         }
     }
-    public downloadFile(id: number) {
-        this.getFileDownload(id).subscribe(res => {
-            this.downloadAction(res);
-        });
+    public downloadFile() {
+        if(this.idFile) {
+            this.getFileDownload(this.idFile).subscribe(res => {
+                this.downloadAction(res);
+            });
+        }
     }
 
     public getFileDownload(id: number): any {
+        console.log(this.uploadFormService.getFile(id));
         return this.uploadFormService.getFile(id);
     }
 
@@ -62,7 +65,7 @@ export class UploadFormComponent implements OnInit {
     public downloadAction(res: any) {
         let fileUrl = URL.createObjectURL(res);
         var link = document.createElement("a");
-        link.download = name;
+        link.download = this.uploadFormService.getFileName();
         link.href = fileUrl;
         link.click();
     }

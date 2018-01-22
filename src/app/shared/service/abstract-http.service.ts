@@ -3,13 +3,14 @@ import { Observable } from "rxjs";
 import 'rxjs/add/operator/map'
 import { Options } from 'selenium-webdriver';
 import { environment } from "../../../environments/environment";
+import { HttpResponse } from "selenium-webdriver/http";
 
 
 
 export abstract class AbstractHttpService<T> {
 
     private apiUrl: string = environment.apiUrl;
-
+    private filename;
     constructor(
         private resource: string, 
         private http: Http) {
@@ -27,6 +28,7 @@ export abstract class AbstractHttpService<T> {
 
     public getFile(id: number) : Observable<Blob> {
         return this.http.get(`${this.apiUrl}${this.resource}/${id}`, this.getCustomOptions()).map(res => {
+            this.filename = res.headers.get('content-disposition').substr(20);
             return new Blob([res.blob()], { type: res.blob().type })
         });
     }
@@ -67,4 +69,9 @@ export abstract class AbstractHttpService<T> {
         // headers.append('Content-Disposition', 'form-data');
         return new RequestOptions({headers: headers, responseType : ResponseContentType.Blob},);
     }
+
+    public getFileName() {
+        return this.filename;
+    }
+
 }

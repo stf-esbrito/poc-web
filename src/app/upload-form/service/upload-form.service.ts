@@ -18,4 +18,10 @@ export class UploadFormService extends AbstractHttpService<any>{
     public getFile(id: number) : Observable<Blob>{
         return super.getFile(id);
     }
+
+    public getFileName() {
+        return super.getFileName();
+    }
+
+
 }
